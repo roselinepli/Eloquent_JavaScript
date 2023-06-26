@@ -121,3 +121,43 @@ function respondErrorOrNothing(respond) {
     };
 }
 
+methods.PUT = function(path, respond, request) {
+    var outStream = fs.createWriteStream(path);
+    outStream.on("error", function(error) {
+        respond(500, error.toString());
+    });
+    outStream.on("finish", function() {
+        respond(204);
+    });
+    request.pipe(outStream);
+};
+
+var Promise = require("promise");
+var fs = require("fs");
+
+var readFile = Promise.denodeify(fs.readFile);
+readFile("file.txt", "utf8").then(function(content) {
+    console.log("The file contained: " + content);
+}, function(error) {
+    console.log("Failed to read file: " + error);
+});
+
+methods.GET = function(path) {
+    return inspectPath(path).then(function(stats) {
+        if (!stats) // DOes not exist
+          return {code: 404, body: "File not found"};
+        else if (stats.isDirectory())
+          return fsp.readdir(path).then(function(files) {
+            return {code: 200, body: files.join("\n")};
+          });
+        else
+          return {code: 200, type: require("mime").lookup(path), body: fs.createReadStream(path)};
+    });
+};
+
+function inspectPath(path) {
+    return fsp.stat(path).then(null, function(error) {
+        if (error.code == "ENOENT") return null;
+        else throw error;
+    });
+}
