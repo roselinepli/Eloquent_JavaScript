@@ -322,3 +322,17 @@ talkForm.addEventListener("submit", function(event) {
 
 
 // Noticing changes
+function waitForChanges() {
+    request({pathname: "talks?changesSince=" + lastServerTime},
+            function(error, response) {
+        if (error) {
+            setTimeout(waitForChanges, 2500);
+            console.error(error.stack);
+        } else {
+            response = JSON.parse(response);
+            displayTalks(response.talks);
+            lastServerTime = response.serverTime;
+            waitForChanges();
+        }
+    });
+}
