@@ -1,1 +1,1 @@
-self-learning form https://eloquentjavascript.net/
+self-learning from https://eloquentjavascript.net/
